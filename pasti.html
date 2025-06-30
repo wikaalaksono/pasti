@@ -2,22 +2,29 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Prediksi Roulette 18 Angka Terstruktur</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prediksi Roulette 18 Angka Terstruktur + Statistik Win/Loss</title>
   <style>
     body { font-family: Arial; padding: 15px; background: #f4f4f4; max-width: 600px; margin: auto; }
-    textarea, input, button { margin-top: 10px; padding: 10px; width: 100%; box-sizing: border-box; }
+    textarea, input, button { margin-top: 10px; padding: 10px; width: 100%; box-sizing: border-box; font-size: 16px; }
     table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 14px; }
     th, td { padding: 8px; border: 1px solid #ccc; text-align: center; }
     th { background-color: #333; color: white; }
     .red-number { color: #b22222; font-weight: bold; }
     .black-number { color: #000; font-weight: bold; }
     .green-number { color: #006400; font-weight: bold; }
+    .stats-container { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 0 6px rgba(0,0,0,0.1); }
+    .stats-text { font-size: 18px; margin-bottom: 10px; }
+    .btn-group button { margin-right: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 4px; }
+    .btn-win { background-color: #28a745; color: white; }
+    .btn-lose { background-color: #dc3545; color: white; }
+    .btn-reset { background-color: #007bff; color: white; }
+    .btn-group button:hover { opacity: 0.85; }
   </style>
 </head>
 <body>
 
-<h2>🎯 Prediksi Roulette 18 Angka</h2>
+<h2>have fun!</h2>
 
 <label>Masukkan Riwayat Angka (pisahkan dengan koma):</label>
 <textarea id="historyInput" rows="5" placeholder="Contoh: 0,23,5,14,8,..."></textarea>
@@ -40,167 +47,186 @@
   <tbody id="resultTable"></tbody>
 </table>
 
+<div class="stats-container">
+  <div class="stats-text" id="statsText">📊 Statistik: Menang: 0 | Kalah: 0</div>
+  <div class="btn-group">
+    <button class="btn-win" onclick="recordWin()">✔ MENANG</button>
+    <button class="btn-lose" onclick="recordLose()">✖ KALAH</button>
+    <button class="btn-reset" onclick="resetStats()">🔄 RESET</button>
+  </div>
+</div>
+
 <script>
-  const red = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const red = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 
-  function getColor(n) {
-    if (n === 0) return "Hijau";
-    return red.has(n) ? "Merah" : "Hitam";
+function getColor(n) {
+  if (n === 0) return "Hijau";
+  return red.has(n) ? "Merah" : "Hitam";
+}
+function getColumn(n) {
+  if (n >= 1 && n <= 12) return 1;
+  if (n >= 13 && n <= 24) return 2;
+  if (n >= 25 && n <= 36) return 3;
+  return "-";
+}
+function isBesar(n) { return n >= 19 && n <= 36; }
+function isKecil(n) { return n >= 1 && n <= 18; }
+function isGanjil(n) { return n % 2 === 1; }
+function isGenap(n) { return n % 2 === 0 && n !== 0; }
+
+function lawan(value, kategori) {
+  if (kategori === 'warna') return value === "Merah" ? "Hitam" : "Merah";
+  if (kategori === 'ganjilgenap') return value === "Ganjil" ? "Genap" : "Ganjil";
+  if (kategori === 'besarkecil') return value === "Besar" ? "Kecil" : "Besar";
+  if (kategori === 'kolom') return [1, 2, 3].filter(k => k !== value);
+}
+
+function generatePrediction() {
+  const historyInput = document.getElementById("historyInput").value;
+  const latestInput = document.getElementById("latestResult").value;
+  const history = historyInput.split(",").map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+  const latest = latestInput.split(/[\s,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n));
+  if (history.length === 0) return alert("Masukkan minimal 1 angka riwayat!");
+  const combined = [...history, ...latest];
+
+  const angkaAcuan = history[history.length - 1];
+  const sebelumAcuan = history.slice(0, history.length - 1);
+
+  let count = {
+    warna: {Merah:0, Hitam:0},
+    ganjil: 0, genap: 0,
+    besar: 0, kecil: 0,
+    kolom: {1:0, 2:0, 3:0}
+  };
+
+  sebelumAcuan.forEach(n => {
+    const w = getColor(n);
+    if (w !== "Hijau") count.warna[w]++;
+    if (isGanjil(n)) count.ganjil++; else if (isGenap(n)) count.genap++;
+    if (isBesar(n)) count.besar++; else if (isKecil(n)) count.kecil++;
+    const c = getColumn(n);
+    if ([1,2,3].includes(c)) count.kolom[c]++;
+  });
+
+  const kategoriAcuan = {
+    warna: getColor(angkaAcuan),
+    ganjilgenap: isGanjil(angkaAcuan) ? "Ganjil" : "Genap",
+    besarkecil: isBesar(angkaAcuan) ? "Besar" : "Kecil",
+    kolom: getColumn(angkaAcuan)
+  };
+
+  const dominan = {};
+  for (let key in kategoriAcuan) {
+    let val = kategoriAcuan[key];
+    if (key === "kolom" && ![1,2,3].includes(val)) { dominan[key] = 1; continue; }
+    let frek = (key === "warna") ? count.warna[val] :
+              (key === "ganjilgenap") ? count[val.toLowerCase()] :
+              (key === "besarkecil") ? count[val.toLowerCase()] :
+              count.kolom[val];
+    let total = (key === "warna") ? (count.warna.Merah + count.warna.Hitam) :
+                (key === "ganjilgenap") ? (count.ganjil + count.genap) :
+                (key === "besarkecil") ? (count.besar + count.kecil) :
+                (count.kolom[1] + count.kolom[2] + count.kolom[3]);
+    dominan[key] = (frek / total) < 0.3 ? lawan(val, key) : val;
   }
 
-  function getColumn(n) {
-    if (n >= 1 && n <= 12) return 1;
-    if (n >= 13 && n <= 24) return 2;
-    if (n >= 25 && n <= 36) return 3;
-    return "-";
+  const freq = Array(37).fill(0);
+  combined.forEach(n => freq[n]++);
+
+  const minFreq = Math.min(...freq.slice(1));
+  const angkaJarang = [];
+  for (let i = 1; i <= 36; i++) {
+    if (freq[i] === minFreq) angkaJarang.push(i);
   }
 
-  function isBesar(n) { return n >= 19 && n <= 36; }
-  function isKecil(n) { return n >= 1 && n <= 18; }
-  function isGanjil(n) { return n % 2 === 1; }
-  function isGenap(n) { return n % 2 === 0 && n !== 0; }
+  const hasil = new Set();
+  hasil.add(0);
+  latest.forEach(n => hasil.add(n));
 
-  function lawanWarna(warna) {
-    if (warna === "Merah") return "Hitam";
-    if (warna === "Hitam") return "Merah";
-    return "Hijau";
-  }
-  function lawanGanjilGenap(gg) {
-    return gg === "Ganjil" ? "Genap" : "Ganjil";
-  }
-  function lawanBesarKecil(bk) {
-    return bk === "Besar" ? "Kecil" : "Besar";
-  }
-  function lawanKolom(kol) {
-    return [1,2,3].filter(k => k !== kol);
+  for (let i = 1; i <= 36 && hasil.size < 18; i++) {
+    const cocok = (
+      getColor(i) === dominan.warna &&
+      (dominan.ganjilgenap === "Ganjil" ? isGanjil(i) : isGenap(i)) &&
+      (dominan.besarkecil === "Besar" ? isBesar(i) : isKecil(i)) &&
+      ([].concat(dominan.kolom).includes(getColumn(i)))
+    );
+    if (cocok) hasil.add(i);
   }
 
-  function generatePrediction() {
-    const historyInput = document.getElementById("historyInput").value;
-    const latestInput = document.getElementById("latestResult").value;
+  angkaJarang.forEach(n => {
+    if (hasil.size < 18) hasil.add(n);
+  });
 
-    const history = historyInput.split(",").map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-    const latest = latestInput.split(/[\s,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-    const combined = [...history, ...latest];
+  if (hasil.size < 18) {
+    const sisaKategori = [
+      { kategori: 'kolom', data: count.kolom },
+      { kategori: 'warna', data: count.warna },
+      { kategori: 'ganjilgenap', data: {Ganjil: count.ganjil, Genap: count.genap} },
+      { kategori: 'besarkecil', data: {Besar: count.besar, Kecil: count.kecil} }
+    ].sort((a, b) => {
+      const sumA = Object.values(a.data).reduce((x, y) => x + y, 0);
+      const sumB = Object.values(b.data).reduce((x, y) => x + y, 0);
+      return sumB - sumA;
+    });
 
-    if (history.length === 0) {
-      alert("Masukkan minimal 1 angka riwayat untuk acuan.");
-      return;
-    }
-
-    const angkaAcuan = history[history.length - 1];
-    const dataSebelumAcuan = history.slice(0, history.length - 1);
-
-    const count = {
-      warna: {Merah:0, Hitam:0, Hijau:0},
-      ganjil: 0, genap: 0,
-      besar: 0, kecil: 0,
-      kolom: {1:0,2:0,3:0}
-    };
-
-    for (const n of dataSebelumAcuan) {
-      const warna = getColor(n);
-      count.warna[warna]++;
-      if (isGanjil(n)) count.ganjil++; else if (isGenap(n)) count.genap++;
-      if (isBesar(n)) count.besar++; else if (isKecil(n)) count.kecil++;
-      const col = getColumn(n);
-      if (col !== "-") count.kolom[col]++;
-    }
-
-    const warnaAcuan = getColor(angkaAcuan);
-    const ggAcuan = isGanjil(angkaAcuan) ? "Ganjil" : isGenap(angkaAcuan) ? "Genap" : "-";
-    const bkAcuan = isBesar(angkaAcuan) ? "Besar" : isKecil(angkaAcuan) ? "Kecil" : "-";
-    const kolAcuan = getColumn(angkaAcuan);
-
-    function kategoriDominan(kategoriAcuan, freqObj, jenis) {
-      if (jenis === "warna") {
-        const total = freqObj.Merah + freqObj.Hitam;
-        const proporsi = freqObj[kategoriAcuan] / (total || 1);
-        return proporsi < 0.3 ? lawanWarna(kategoriAcuan) : kategoriAcuan;
-      } else if (jenis === "ganjilgenap") {
-        const total = freqObj.ganjil + freqObj.genap;
-        const proporsi = (kategoriAcuan === "Ganjil" ? freqObj.ganjil : freqObj.genap) / (total || 1);
-        return proporsi < 0.3 ? lawanGanjilGenap(kategoriAcuan) : kategoriAcuan;
-      } else if (jenis === "besarkecil") {
-        const total = freqObj.besar + freqObj.kecil;
-        const proporsi = (kategoriAcuan === "Besar" ? freqObj.besar : freqObj.kecil) / (total || 1);
-        return proporsi < 0.3 ? lawanBesarKecil(kategoriAcuan) : kategoriAcuan;
-      } else if (jenis === "kolom") {
-        if (![1, 2, 3].includes(kategoriAcuan)) return 1;
-        const total = freqObj[1] + freqObj[2] + freqObj[3];
-        const proporsi = freqObj[kategoriAcuan] / (total || 1);
-        return proporsi < 0.3 ? lawanKolom(kategoriAcuan) : kategoriAcuan;
-      }
-      return kategoriAcuan;
-    }
-
-    const warnaDom = kategoriDominan(warnaAcuan, count.warna, "warna");
-    const ggDom = kategoriDominan(ggAcuan, count, "ganjilgenap");
-    const bkDom = kategoriDominan(bkAcuan, count, "besarkecil");
-    const kolDom = kategoriDominan(kolAcuan, count.kolom, "kolom");
-
-    const freq = Array(37).fill(0);
-    combined.forEach(n => freq[n]++);
-
-    const minFreq = Math.min(...freq.slice(1));
-    const angkaJarang = [];
-    for (let i = 1; i <= 36; i++) {
-      if (freq[i] === minFreq) angkaJarang.push(i);
-    }
-
-    const hasil = new Set();
-    hasil.add(0);
-    latest.forEach(n => hasil.add(n));
-
-    for (let i = 1; i <= 36 && hasil.size < 15; i++) {
-      const cocokKolom = Array.isArray(kolDom) ? kolDom.includes(getColumn(i)) : getColumn(i) === kolDom;
+    const prioritasKategori = sisaKategori[0].kategori;
+    for (let i = 1; i <= 36 && hasil.size < 18; i++) {
+      if (hasil.has(i)) continue;
       if (
-        getColor(i) === warnaDom &&
-        (ggDom === "Ganjil" ? isGanjil(i) : isGenap(i)) &&
-        (bkDom === "Besar" ? isBesar(i) : isKecil(i)) &&
-        cocokKolom
+        (prioritasKategori === 'warna' && getColor(i) === dominan.warna) ||
+        (prioritasKategori === 'ganjilgenap' && ((dominan.ganjilgenap === "Ganjil" && isGanjil(i)) || (dominan.ganjilgenap === "Genap" && isGenap(i)))) ||
+        (prioritasKategori === 'besarkecil' && ((dominan.besarkecil === "Besar" && isBesar(i)) || (dominan.besarkecil === "Kecil" && isKecil(i)))) ||
+        (prioritasKategori === 'kolom' && [].concat(dominan.kolom).includes(getColumn(i)))
       ) {
         hasil.add(i);
       }
     }
-
-    let jarangMasuk = 0;
-    for (const ang of angkaJarang) {
-      if (hasil.size >= 18) break;
-      if (!hasil.has(ang)) {
-        hasil.add(ang);
-        jarangMasuk++;
-      }
-    }
-
-    if (jarangMasuk < 3) {
-      for (let i = 1; i <= 36 && hasil.size < 18; i++) {
-        if (!hasil.has(i)) {
-          if ((bkDom === "Besar" && isBesar(i)) || (bkDom === "Kecil" && isKecil(i))) {
-            hasil.add(i);
-          }
-        }
-      }
-    }
-
-    const tbody = document.getElementById("resultTable");
-    tbody.innerHTML = "";
-
-    Array.from(hasil).slice(0, 18).forEach(n => {
-      const colorClass = n === 0 ? "green-number" : red.has(n) ? "red-number" : "black-number";
-      tbody.innerHTML += `<tr>
-        <td class="${colorClass}">${n}</td>
-        <td>${getColor(n)}</td>
-        <td>${getColumn(n)}</td>
-        <td>${isBesar(n) ? "Besar" : isKecil(n) ? "Kecil" : "-"}</td>
-        <td>${isGanjil(n) ? "Ganjil" : isGenap(n) ? "Genap" : "-"}</td>
-      </tr>`;
-    });
-
-    const updatedHistory = [...history, ...latest].slice(-100);
-    document.getElementById("historyInput").value = updatedHistory.join(",");
-    document.getElementById("latestResult").value = "";
   }
+
+  const tbody = document.getElementById("resultTable");
+  tbody.innerHTML = "";
+  Array.from(hasil).slice(0, 18).forEach(n => {
+    const colorClass = n === 0 ? "green-number" : red.has(n) ? "red-number" : "black-number";
+    tbody.innerHTML += `<tr>
+      <td class="${colorClass}">${n}</td>
+      <td>${getColor(n)}</td>
+      <td>${getColumn(n)}</td>
+      <td>${isBesar(n) ? "Besar" : isKecil(n) ? "Kecil" : "-"}</td>
+      <td>${isGanjil(n) ? "Ganjil" : isGenap(n) ? "Genap" : "-"}</td>
+    </tr>`;
+  });
+
+  const updatedHistory = [...history, ...latest].slice(-100);
+  document.getElementById("historyInput").value = updatedHistory.join(",");
+  document.getElementById("latestResult").value = "";
+}
+
+// Statistik Win/Loss Management
+function updateStatsUI() {
+  const menang = parseInt(localStorage.getItem("statMenang") || "0");
+  const kalah = parseInt(localStorage.getItem("statKalah") || "0");
+  document.getElementById("statsText").textContent = `📊 Statistik: Menang: ${menang} | Kalah: ${kalah}`;
+}
+function recordWin() {
+  let menang = parseInt(localStorage.getItem("statMenang") || "0");
+  localStorage.setItem("statMenang", menang + 1);
+  updateStatsUI();
+}
+function recordLose() {
+  let kalah = parseInt(localStorage.getItem("statKalah") || "0");
+  localStorage.setItem("statKalah", kalah + 1);
+  updateStatsUI();
+}
+function resetStats() {
+  if (confirm("Yakin ingin reset statistik menang/kalah?")) {
+    localStorage.setItem("statMenang", "0");
+    localStorage.setItem("statKalah", "0");
+    updateStatsUI();
+  }
+}
+
+// Initialize stats on load
+updateStatsUI();
 </script>
 
 </body>
