@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prediksi Roulette 18 Angka Terstruktur + Statistik Win/Loss</title>
+  <title>Prediksi Roulette 18 Angka + Statistik Otomatis</title>
   <style>
     body { font-family: Arial; padding: 15px; background: #f4f4f4; max-width: 600px; margin: auto; }
     textarea, input, button { margin-top: 10px; padding: 10px; width: 100%; box-sizing: border-box; font-size: 16px; }
@@ -13,18 +13,14 @@
     .red-number { color: #b22222; font-weight: bold; }
     .black-number { color: #000; font-weight: bold; }
     .green-number { color: #006400; font-weight: bold; }
-    .stats-container { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 0 6px rgba(0,0,0,0.1); }
-    .stats-text { font-size: 18px; margin-bottom: 10px; }
-    .btn-group button { margin-right: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 4px; }
-    .btn-win { background-color: #28a745; color: white; }
-    .btn-lose { background-color: #dc3545; color: white; }
-    .btn-reset { background-color: #007bff; color: white; }
-    .btn-group button:hover { opacity: 0.85; }
+    .stats-container { margin-top: 20px; background: #fff; padding: 15px; border-radius: 6px; box-shadow: 0 0 6px rgba(0,0,0,0.1); font-size: 18px; text-align: center; }
+    .btn-reset { margin-top: 10px; padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 4px; background-color: #007bff; color: white; }
+    .btn-reset:hover { opacity: 0.85; }
   </style>
 </head>
 <body>
 
-<h2>have fun!</h2>
+<h2>🎯 Prediksi Roulette 18 Angka + Statistik Otomatis</h2>
 
 <label>Masukkan Riwayat Angka (pisahkan dengan koma):</label>
 <textarea id="historyInput" rows="5" placeholder="Contoh: 0,23,5,14,8,..."></textarea>
@@ -48,12 +44,9 @@
 </table>
 
 <div class="stats-container">
-  <div class="stats-text" id="statsText">📊 Statistik: Menang: 0 | Kalah: 0</div>
-  <div class="btn-group">
-    <button class="btn-win" onclick="recordWin()">✔ MENANG</button>
-    <button class="btn-lose" onclick="recordLose()">✖ KALAH</button>
-    <button class="btn-reset" onclick="resetStats()">🔄 RESET</button>
-  </div>
+  📊 <span id="statsText">Menang: 0</span>
+  <br />
+  <button class="btn-reset" onclick="resetStats()">🔄 Reset Statistik</button>
 </div>
 
 <script>
@@ -87,7 +80,6 @@ function generatePrediction() {
   const history = historyInput.split(",").map(n => parseInt(n.trim())).filter(n => !isNaN(n));
   const latest = latestInput.split(/[\s,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n));
   if (history.length === 0) return alert("Masukkan minimal 1 angka riwayat!");
-  const combined = [...history, ...latest];
 
   const angkaAcuan = history[history.length - 1];
   const sebelumAcuan = history.slice(0, history.length - 1);
@@ -130,6 +122,7 @@ function generatePrediction() {
     dominan[key] = (frek / total) < 0.3 ? lawan(val, key) : val;
   }
 
+  const combined = [...history, ...latest];
   const freq = Array(37).fill(0);
   combined.forEach(n => freq[n]++);
 
@@ -199,33 +192,40 @@ function generatePrediction() {
   const updatedHistory = [...history, ...latest].slice(-100);
   document.getElementById("historyInput").value = updatedHistory.join(",");
   document.getElementById("latestResult").value = "";
+
+  updateWinIfMatch(latest, hasil);
 }
 
-// Statistik Win/Loss Management
+function updateWinIfMatch(latest, hasil) {
+  if (!latest || latest.length === 0) return;
+  let menang = parseInt(localStorage.getItem("statMenang") || "0");
+
+  // Jika semua angka hasil terbaru ada di prediksi, hitung menang bertambah
+  // Karena prediksi bisa 18 angka, cukup cek apakah semua angka latest ada di hasil prediksi
+  let semuaAda = latest.every(n => hasil.has(n));
+
+  // Alternatif: hitung menang jika setidaknya satu angka latest ada di hasil (sesuaikan sesuai keinginan)
+  // let semuaAda = latest.some(n => hasil.has(n));
+
+  if (semuaAda) {
+    menang++;
+    localStorage.setItem("statMenang", menang);
+  }
+  updateStatsUI();
+}
+
 function updateStatsUI() {
   const menang = parseInt(localStorage.getItem("statMenang") || "0");
-  const kalah = parseInt(localStorage.getItem("statKalah") || "0");
-  document.getElementById("statsText").textContent = `📊 Statistik: Menang: ${menang} | Kalah: ${kalah}`;
+  document.getElementById("statsText").textContent = `Menang: ${menang}`;
 }
-function recordWin() {
-  let menang = parseInt(localStorage.getItem("statMenang") || "0");
-  localStorage.setItem("statMenang", menang + 1);
-  updateStatsUI();
-}
-function recordLose() {
-  let kalah = parseInt(localStorage.getItem("statKalah") || "0");
-  localStorage.setItem("statKalah", kalah + 1);
-  updateStatsUI();
-}
+
 function resetStats() {
-  if (confirm("Yakin ingin reset statistik menang/kalah?")) {
+  if (confirm("Yakin ingin reset statistik menang?")) {
     localStorage.setItem("statMenang", "0");
-    localStorage.setItem("statKalah", "0");
     updateStatsUI();
   }
 }
 
-// Initialize stats on load
 updateStatsUI();
 </script>
 
