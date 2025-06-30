@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Prediksi Roulette 18 Angka Terstruktur</title>
-  <style>
-    body { font-family: Arial; padding: 15px; background: #f4f4f4; max-width: 600px; margin: auto; }
-    textarea, input, button { margin-top: 10px; padding: 10px; width: 100%; box-sizing: border-box; }
-    table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 14px; }
-    th, td { padding: 8px; border: 1px solid #ccc; text-align: center; }
-    th { background-color: #333; color: white; }
-    .red-number { color: #b22222; font-weight: bold; }
-    .black-number { color: #000; font-weight: bold; }
-    .green-number { color: #006400; font-weight: bold; }
-    .highlight { background-color: #eaffea; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Prediksi Roulette 18 Angka Terstruktur</title>
+<style>
+  body { font-family: Arial; padding: 15px; background: #f4f4f4; max-width: 600px; margin: auto; }
+  textarea, input, button { margin-top: 10px; padding: 10px; width: 100%; box-sizing: border-box; }
+  table { width: 100%; margin-top: 20px; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 8px; border: 1px solid #ccc; text-align: center; }
+  th { background-color: #333; color: white; }
+  .red-number { color: #b22222; font-weight: bold; }
+  .black-number { color: #000; font-weight: bold; }
+  .green-number { color: #006400; font-weight: bold; }
+  .highlight { background-color: #eaffea; }
+</style>
 </head>
 <body>
 
@@ -42,120 +42,236 @@
 </table>
 
 <script>
-  const red = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
-  const green = 0;
+const redNumbers = new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
 
-  function getColor(n) {
-    if (n === 0) return "Hijau";
-    if (red.has(n)) return "Merah";
-    return "Hitam";
+function getColor(n) {
+  if (n === 0) return 'Hijau';
+  if (redNumbers.has(n)) return 'Merah';
+  return 'Hitam';
+}
+
+function getColumn(n) {
+  if (n >= 1 && n <= 12) return 1;
+  if (n >= 13 && n <= 24) return 2;
+  if (n >= 25 && n <= 36) return 3;
+  return '-';
+}
+
+function isBesar(n) { return n >= 19 && n <= 36; }
+function isKecil(n) { return n >= 1 && n <= 18; }
+function isGanjil(n) { return n % 2 === 1; }
+function isGenap(n) { return n % 2 === 0 && n !== 0; }
+
+// Fungsi pembalik kategori: untuk lawan dominan jika minoritas
+function lawanWarna(warna) {
+  if (warna === 'Merah') return 'Hitam';
+  if (warna === 'Hitam') return 'Merah';
+  return 'Hijau'; // 0 hijau tidak ada lawan logis
+}
+function lawanGanjilGenap(gg) {
+  if (gg === 'Ganjil') return 'Genap';
+  if (gg === 'Genap') return 'Ganjil';
+  return '-';
+}
+function lawanBesarKecil(bk) {
+  if (bk === 'Besar') return 'Kecil';
+  if (bk === 'Kecil') return 'Besar';
+  return '-';
+}
+function lawanKolom(kol) {
+  // Kolom lawan bisa dua kolom lain, kita return array lawan
+  const kolom = [1,2,3];
+  return kolom.filter(c => c !== kol);
+}
+
+function generatePrediction() {
+  const historyInput = document.getElementById('historyInput').value;
+  const latestInput = document.getElementById('latestResult').value;
+
+  let history = historyInput.split(',').map(n=>parseInt(n.trim())).filter(n=>!isNaN(n));
+  let latest = latestInput.split(/[\s,]+/).map(n=>parseInt(n.trim())).filter(n=>!isNaN(n));
+
+  if(history.length === 0 && latest.length === 0) {
+    alert('Masukkan riwayat atau hasil terbaru.');
+    return;
   }
 
-  function getColumn(n) {
-    if (n >= 1 && n <= 12) return 1;
-    if (n >= 13 && n <= 24) return 2;
-    if (n >= 25 && n <= 36) return 3;
-    return "-";
+  // Angka terakhir dari history sebagai acuan
+  if(history.length === 0) {
+    alert('Masukkan minimal 1 angka riwayat untuk acuan.');
+    return;
   }
+  const angkaAcuan = history[history.length -1];
 
-  function isBesar(n) { return n >= 19 && n <= 36; }
-  function isKecil(n) { return n >= 1 && n <= 18; }
+  // Data sebelum angkaAcuan (semua kecuali angkaAcuan)
+  const dataSebelumAcuan = history.slice(0, history.length -1);
 
-  function isGanjil(n) { return n % 2 === 1; }
-  function isGenap(n) { return n % 2 === 0 && n !== 0; }
-
-  function generatePrediction() {
-    const historyInput = document.getElementById("historyInput").value;
-    const latestInput = document.getElementById("latestResult").value;
-
-    const history = historyInput.split(",").map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-    const latest = latestInput.split(/[\s,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n));
-
-    const combined = [...history, ...latest];
-    if (combined.length === 0) {
-      alert("Masukkan riwayat atau hasil terbaru.");
-      return;
-    }
-
-    const freq = Array(37).fill(0);
-    combined.forEach(n => freq[n]++);
-
-    const all = Array.from({length: 37}, (_, i) => i);
-
-    // Statistik dominan
-    const count = {
-      merah: 0, hitam: 0, hijau: 0,
-      ganjil: 0, genap: 0,
-      besar: 0, kecil: 0,
+  // Fungsi hitung frekuensi kategori di dataSebelumAcuan
+  function hitungFreqKategori(data) {
+    const freq = {
+      warna: {Merah:0, Hitam:0, Hijau:0},
+      ganjil:0,
+      genap:0,
+      besar:0,
+      kecil:0,
       kolom: {1:0,2:0,3:0}
     };
+    for(const n of data) {
+      const w = getColor(n);
+      freq.warna[w]++;
+      if(isGanjil(n)) freq.ganjil++;
+      else if(isGenap(n)) freq.genap++;
+      if(isBesar(n)) freq.besar++;
+      else if(isKecil(n)) freq.kecil++;
+      const c = getColumn(n);
+      if(c !== '-') freq.kolom[c]++;
+    }
+    return freq;
+  }
 
-    combined.forEach(n => {
-      const color = getColor(n).toLowerCase();
-      count[color]++;
-      if (isGanjil(n)) count.ganjil++;
-      else if (isGenap(n)) count.genap++;
-      if (isBesar(n)) count.besar++;
-      else if (isKecil(n)) count.kecil++;
-      const col = getColumn(n);
-      if (col !== "-") count.kolom[col]++;
-    });
+  const freqSebelum = hitungFreqKategori(dataSebelumAcuan);
 
-    // Tentukan dominan
-    const warnaDom = Object.entries({merah:count.merah, hitam:count.hitam}).sort((a,b)=>b[1]-a[1])[0][0];
-    const genapGanjilDom = count.ganjil >= count.genap ? "ganjil" : "genap";
-    const besarKecilDom = count.besar >= count.kecil ? "besar" : "kecil";
-    const kolomDom = Object.entries(count.kolom).sort((a,b)=>b[1]-a[1])[0][0];
+  // Cek kategori angkaAcuan
+  const warnaAcuan = getColor(angkaAcuan);
+  const ggAcuan = isGanjil(angkaAcuan) ? 'Ganjil' : isGenap(angkaAcuan) ? 'Genap' : '-';
+  const bkAcuan = isBesar(angkaAcuan) ? 'Besar' : isKecil(angkaAcuan) ? 'Kecil' : '-';
+  const kolAcuan = getColumn(angkaAcuan);
 
-    const hasil = [];
-    const sudah = new Set();
+  // Tentukan dominasi kategori berdasarkan frekuensi
+  // Jika kategori angkaAcuan minoritas (jarang), gunakan lawannya, else gunakan kategori angkaAcuan
 
-    function tambah(n) {
-      if (!sudah.has(n) && hasil.length < 18) {
-        sudah.add(n);
-        hasil.push(n);
+  function kategoriDominan(kategoriAcuan, freqObj, kategoriType) {
+    if(kategoriType === 'warna') {
+      // Hitung total merah+hitam (abaikan hijau)
+      const total = freqObj.Merah + freqObj.Hitam;
+      if(total === 0) return kategoriAcuan; // fallback
+      const proporsi = freqObj[kategoriAcuan] / total;
+      if(proporsi < 0.3) return lawanWarna(kategoriAcuan);
+      return kategoriAcuan;
+    } else if(kategoriType === 'ganjilgenap') {
+      const total = freqObj.ganjil + freqObj.genap;
+      if(total === 0) return kategoriAcuan;
+      const proporsi = kategoriAcuan === 'Ganjil' ? freqObj.ganjil / total : freqObj.genap / total;
+      if(proporsi < 0.3) return lawanGanjilGenap(kategoriAcuan);
+      return kategoriAcuan;
+    } else if(kategoriType === 'besarkecil') {
+      const total = freqObj.besar + freqObj.kecil;
+      if(total === 0) return kategoriAcuan;
+      const proporsi = kategoriAcuan === 'Besar' ? freqObj.besar / total : freqObj.kecil / total;
+      if(proporsi < 0.3) return lawanBesarKecil(kategoriAcuan);
+      return kategoriAcuan;
+    } else if(kategoriType === 'kolom') {
+      const total = freqObj.kolom[1] + freqObj.kolom[2] + freqObj.kolom[3];
+      if(total === 0) return kategoriAcuan;
+      const proporsi = freqObj.kolom[kategoriAcuan] / total;
+      if(proporsi < 0.3) {
+        // Return lawan kolom (array)
+        return lawanKolom(kategoriAcuan);
+      }
+      return kategoriAcuan;
+    }
+    return kategoriAcuan;
+  }
+
+  const warnaDom = kategoriDominan(warnaAcuan, freqSebelum.warna, 'warna');
+  const ggDom = kategoriDominan(ggAcuan, freqSebelum, 'ganjilgenap');
+  const bkDom = kategoriDominan(bkAcuan, freqSebelum, 'besarkecil');
+  const kolDom = kategoriDominan(kolAcuan, freqSebelum.kolom, 'kolom');
+
+  // Fungsi cek kecocokan angka dengan dominasi kategori
+  function cocokDominasi(n) {
+    if(n === 0) return false; // 0 tidak ikut kecocokan dominan
+    if(typeof kolDom === 'object') {
+      if(!kolDom.includes(getColumn(n))) return false;
+    } else {
+      if(getColumn(n) !== kolDom) return false;
+    }
+    if(getColor(n) !== warnaDom) return false;
+    if(bkDom === 'Besar' && !isBesar(n)) return false;
+    if(bkDom === 'Kecil' && !isKecil(n)) return false;
+    if(ggDom === 'Ganjil' && !isGanjil(n)) return false;
+    if(ggDom === 'Genap' && !isGenap(n)) return false;
+    return true;
+  }
+
+  // Hitung frekuensi semua angka (riwayat + terbaru)
+  const combinedAll = [...history, ...latest];
+  const freqAngka = Array(37).fill(0);
+  combinedAll.forEach(n => { if(n >=0 && n<=36) freqAngka[n]++; });
+
+  // Cari angka paling jarang (freq = 0 atau min freq)
+  let minFreq = Infinity;
+  for(let i=1;i<=36;i++) {
+    if(freqAngka[i] < minFreq) minFreq = freqAngka[i];
+  }
+  // Ambil angka freq = minFreq
+  const angkaJarang = [];
+  for(let i=1;i<=36;i++) {
+    if(freqAngka[i] === minFreq) angkaJarang.push(i);
+  }
+
+  // Siapkan hasil prediksi
+  const hasil = new Set();
+
+  // 1. Tambah angka 0 wajib
+  hasil.add(0);
+
+  // 2. Tambah angka terbaru (max 3)
+  latest.forEach(n=>{
+    if(n>=0 && n<=36) hasil.add(n);
+  });
+
+  // 3. Tambah angka dominan (cocok semua kategori)
+  for(let i=1;i<=36;i++) {
+    if(hasil.size >= 15) break;
+    if(cocokDominasi(i)) hasil.add(i);
+  }
+
+  // 4. Tambah 3 angka jarang
+  let jarangDimasukkan = 0;
+  for(let ang of angkaJarang) {
+    if(jarangDimasukkan >= 3) break;
+    if(!hasil.has(ang)) hasil.add(ang);
+    jarangDimasukkan++;
+  }
+
+  // Jika angka jarang kurang dari 3, tambah dari kategori besar/kecil dominan
+  if(jarangDimasukkan < 3) {
+    for(let i=1; i<=36; i++) {
+      if(hasil.size >= 18) break;
+      if(!hasil.has(i)) {
+        if(bkDom === 'Besar' && isBesar(i)) hasil.add(i);
+        else if(bkDom === 'Kecil' && isKecil(i)) hasil.add(i);
       }
     }
-
-    // 1. Tambahkan 0
-    tambah(0);
-
-    // 2. Tambahkan 3 hasil terbaru
-    latest.forEach(tambah);
-
-    // 3. Tambah dari warna dominan
-    all.filter(n => getColor(n).toLowerCase() === warnaDom).forEach(tambah);
-
-    // 4. Tambah dari ganjil/genap dominan
-    all.filter(n => genapGanjilDom === "ganjil" ? isGanjil(n) : isGenap(n)).forEach(tambah);
-
-    // 5. Tambah dari besar/kecil dominan
-    all.filter(n => besarKecilDom === "besar" ? isBesar(n) : isKecil(n)).forEach(tambah);
-
-    // 6. Tambah dari kolom dominan
-    all.filter(n => getColumn(n) == kolomDom).forEach(tambah);
-
-    // Hasilkan tabel
-    const tbody = document.getElementById("resultTable");
-    tbody.innerHTML = "";
-    hasil.slice(0, 18).forEach(n => {
-      const row = document.createElement("tr");
-      const colorClass = n === 0 ? "green-number" : red.has(n) ? "red-number" : "black-number";
-      row.innerHTML = `
-        <td class="${colorClass}">${n}</td>
-        <td>${getColor(n)}</td>
-        <td>${getColumn(n)}</td>
-        <td>${isBesar(n) ? "Besar" : isKecil(n) ? "Kecil" : "-"}</td>
-        <td>${isGanjil(n) ? "Ganjil" : isGenap(n) ? "Genap" : "-"}</td>
-      `;
-      tbody.appendChild(row);
-    });
-
-    // Update textarea (auto tambah hasil baru ke history)
-    const updatedHistory = [...history, ...latest].slice(-100); // Max 100 riwayat
-    document.getElementById("historyInput").value = updatedHistory.join(",");
-    document.getElementById("latestResult").value = "";
   }
+
+  // 5. Pelengkap sampai 18 angka (ambil angka lain secara urut)
+  for(let i=0;i<=36;i++) {
+    if(hasil.size >= 18) break;
+    if(!hasil.has(i)) hasil.add(i);
+  }
+
+  // Tampilkan hasil di tabel
+  const tbody = document.getElementById('resultTable');
+  tbody.innerHTML = '';
+
+  Array.from(hasil).slice(0,18).forEach(n=>{
+    const colorClass = (n === 0) ? 'green-number' : (redNumbers.has(n) ? 'red-number' : 'black-number');
+    tbody.innerHTML += `<tr>
+      <td class="${colorClass}">${n}</td>
+      <td>${getColor(n)}</td>
+      <td>${getColumn(n)}</td>
+      <td>${isBesar(n) ? 'Besar' : isKecil(n) ? 'Kecil' : '-'}</td>
+      <td>${isGanjil(n) ? 'Ganjil' : isGenap(n) ? 'Genap' : '-'}</td>
+    </tr>`;
+  });
+
+  // Update textarea history dengan max 100 angka
+  const updatedHistory = [...history, ...latest].slice(-100);
+  document.getElementById('historyInput').value = updatedHistory.join(',');
+  document.getElementById('latestResult').value = '';
+}
 </script>
 
 </body>
