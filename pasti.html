@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Prediksi Roulette 18 Angka + Statistik Otomatis</title>
+  <title>Prediksi Roulette 18 Angka + Statistik Menang/Kalah</title>
   <style>
     body { font-family: Arial; padding: 15px; background: #f4f4f4; max-width: 600px; margin: auto; }
     textarea, input, button { margin-top: 10px; padding: 10px; width: 100%; box-sizing: border-box; font-size: 16px; }
@@ -20,7 +20,7 @@
 </head>
 <body>
 
-<h2>kontol🫥</h2>
+<h2>sabar ya allah</h2>
 
 <label>Masukkan Riwayat Angka (pisahkan dengan koma):</label>
 <textarea id="historyInput" rows="5" placeholder="Contoh: 0,23,5,14,8,..."></textarea>
@@ -44,7 +44,7 @@
 </table>
 
 <div class="stats-container">
-  📊 <span id="statsText">Menang: 0</span>
+  📊 <span id="statsText">Menang: 0 | Kalah: 0</span>
   <br />
   <button class="btn-reset" onclick="resetStats()">🔄 Reset Statistik</button>
 </div>
@@ -193,35 +193,36 @@ function generatePrediction() {
   document.getElementById("historyInput").value = updatedHistory.join(",");
   document.getElementById("latestResult").value = "";
 
-  updateWinIfMatch(latest, hasil);
+  updateWinLoseStats(latest, hasil);
 }
 
-function updateWinIfMatch(latest, hasil) {
+function updateWinLoseStats(latest, hasil) {
   if (!latest || latest.length === 0) return;
   let menang = parseInt(localStorage.getItem("statMenang") || "0");
+  let kalah = parseInt(localStorage.getItem("statKalah") || "0");
 
-  // Jika semua angka hasil terbaru ada di prediksi, hitung menang bertambah
-  // Karena prediksi bisa 18 angka, cukup cek apakah semua angka latest ada di hasil prediksi
-  let semuaAda = latest.every(n => hasil.has(n));
+  // Jika ada minimal 1 angka hasil terbaru ada di prediksi → menang
+  const adaYangCocok = latest.some(n => hasil.has(n));
 
-  // Alternatif: hitung menang jika setidaknya satu angka latest ada di hasil (sesuaikan sesuai keinginan)
-  // let semuaAda = latest.some(n => hasil.has(n));
+  if (adaYangCocok) menang++;
+  else kalah++;
 
-  if (semuaAda) {
-    menang++;
-    localStorage.setItem("statMenang", menang);
-  }
+  localStorage.setItem("statMenang", menang);
+  localStorage.setItem("statKalah", kalah);
+
   updateStatsUI();
 }
 
 function updateStatsUI() {
   const menang = parseInt(localStorage.getItem("statMenang") || "0");
-  document.getElementById("statsText").textContent = `Menang: ${menang}`;
+  const kalah = parseInt(localStorage.getItem("statKalah") || "0");
+  document.getElementById("statsText").textContent = `Menang: ${menang} | Kalah: ${kalah}`;
 }
 
 function resetStats() {
-  if (confirm("Yakin ingin reset statistik menang?")) {
+  if (confirm("Yakin ingin reset statistik menang/kalah?")) {
     localStorage.setItem("statMenang", "0");
+    localStorage.setItem("statKalah", "0");
     updateStatsUI();
   }
 }
