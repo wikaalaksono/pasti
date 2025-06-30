@@ -2,25 +2,28 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <title>Prediksi Roulette (18 Angka Terstruktur)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎯 Prediksi Roulette Adaptif</title>
   <style>
-    body { font-family: Arial, padding: 20px; background: #f4f4f4; }
-    textarea, input, button { margin-top: 10px; padding: 10px; width: 100%; box-sizing: border-box; font-size: 16px; }
-    table { width: 100%; margin-top: 20px; border-collapse: collapse; }
-    th, td { padding: 8px; border: 1px solid #ccc; text-align: center; }
+    body { font-family: Arial, sans-serif; margin: 0; padding: 1rem; background: #f4f4f4; }
+    textarea, input, button { width: 100%; padding: 0.75rem; margin-top: 0.5rem; box-sizing: border-box; border-radius: 6px; border: 1px solid #ccc; }
+    button { background-color: #333; color: white; font-weight: bold; cursor: pointer; }
+    table { width: 100%; margin-top: 1rem; border-collapse: collapse; }
+    th, td { padding: 0.6rem; border: 1px solid #ccc; text-align: center; font-size: 0.9rem; }
     th { background-color: #333; color: white; }
     .highlight { background-color: #d1ffd1; }
     .red-number { color: #b22222; font-weight: bold; }
     .black-number { color: #000; font-weight: bold; }
     .green-number { color: #006400; font-weight: bold; }
-    #stats, #currentMethod { margin-top: 15px; font-weight: bold; font-size: 16px; }
-    .btn-reset { background: #ff4444; color: white; border: none; padding: 10px; width: 100%; margin-top: 10px; cursor: pointer; font-size: 16px; }
+    #stats, #currentMethod { margin-top: 1rem; font-weight: bold; text-align: center; }
+    @media (max-width: 600px) {
+      table, th, td { font-size: 0.8rem; }
+    }
   </style>
 </head>
 <body>
 
-<h2>wow banget</h2>
+<h2>🎯 Prediksi Roulette Berdasarkan Pola 5 Putaran Terakhir</h2>
 
 <label>Masukkan Riwayat Angka (pisahkan dengan koma):</label>
 <textarea id="historyInput" rows="6" placeholder="Contoh: 0,23,5,14,8,..."></textarea>
@@ -29,7 +32,7 @@
 <input type="text" id="latestResult" placeholder="Contoh: 10,20,30" />
 
 <button onclick="generatePrediction()">🔍 Proses Prediksi</button>
-<button class="btn-reset" onclick="resetStats()">🔄 Reset Statistik</button>
+<button onclick="resetStats()">🔄 Reset Statistik</button>
 
 <div id="currentMethod"></div>
 <div id="stats"></div>
@@ -53,18 +56,6 @@ const STORAGE_BENAR = "statBenar";
 const STORAGE_SALAH = "statSalah";
 const STORAGE_LAST_PREDIKSI = "lastPrediksi";
 
-function resetStats() {
-  localStorage.removeItem(STORAGE_BENAR);
-  localStorage.removeItem(STORAGE_SALAH);
-  localStorage.removeItem(STORAGE_LAST_PREDIKSI);
-  showStats();
-}
-
-function getNumberColorClass(number) {
-  if (number === greenNumber) return "green-number";
-  if (redNumbers.has(number)) return "red-number";
-  return "black-number";
-}
 function getColor(n) {
   if (n === greenNumber) return "green";
   if (redNumbers.has(n)) return "red";
@@ -80,7 +71,6 @@ function getColumn(n) {
   if (n >= 25 && n <= 36) return 3;
   return 0;
 }
-
 function getStats() {
   return {
     benar: parseInt(localStorage.getItem(STORAGE_BENAR)) || 0,
@@ -93,11 +83,15 @@ function saveStats(stats) {
   localStorage.setItem(STORAGE_SALAH, stats.salah);
   localStorage.setItem(STORAGE_LAST_PREDIKSI, JSON.stringify(stats.lastPrediksi));
 }
-
+function resetStats() {
+  localStorage.removeItem(STORAGE_BENAR);
+  localStorage.removeItem(STORAGE_SALAH);
+  localStorage.removeItem(STORAGE_LAST_PREDIKSI);
+  showStats();
+}
 function showStats() {
   const stats = getStats();
-  document.getElementById("stats").innerHTML =
-    `✅ Benar: ${stats.benar} &nbsp;&nbsp;❌ Salah: ${stats.salah}`;
+  document.getElementById("stats").innerHTML = `✅ Benar: ${stats.benar} &nbsp;&nbsp;❌ Salah: ${stats.salah}`;
 }
 
 function generatePrediction() {
@@ -105,124 +99,71 @@ function generatePrediction() {
   const latestElem = document.getElementById("latestResult");
   let historyArr = historyElem.value.split(",").map(n => n.trim()).filter(n => n !== "");
   const latestInput = latestElem.value.trim();
-  const latestNums = latestInput ? latestInput.split(/[,\s]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n <= 36) : [];
+  const latestNums = latestInput ? latestInput.split(/[\s,]+/).map(n => parseInt(n.trim())).filter(n => !isNaN(n) && n >= 0 && n <= 36) : [];
   latestNums.forEach(n => historyArr.push(n.toString()));
   historyElem.value = historyArr.join(",");
-
-  if (historyArr.length === 0) {
-    alert("Masukkan riwayat angka terlebih dahulu.");
-    return;
-  }
-
+  if (historyArr.length < 5) return alert("Masukkan minimal 5 angka riwayat.");
   const history = historyArr.map(Number);
+  const last5 = history.slice(-5);
+  const colorDom = getColor(last5.filter(n => n !== 0).sort((a,b) => getColorFreq(last5,a) - getColorFreq(last5,b)).pop());
+  const sizeDom = last5.filter(isLow).length > 2 ? "low" : "high";
+  const parityDom = last5.filter(isOdd).length > 2 ? "odd" : "even";
+  const colFreq = [0,0,0,0];
+  last5.forEach(n => colFreq[getColumn(n)]++);
+  const colDom = colFreq.indexOf(Math.max(...colFreq));
+
   const allNumbers = Array.from({ length: 37 }, (_, i) => i);
   const freqMap = {};
-  const colorCount = { red: 0, black: 0, green: 0 };
-  const parityCount = { odd: 0, even: 0 };
-  const sizeCount = { low: 0, high: 0 };
-  const columnCount = { 1: 0, 2: 0, 3: 0 };
-
-  allNumbers.forEach(n => { freqMap[n] = 0; });
-  history.forEach(n => {
-    freqMap[n]++;
-    colorCount[getColor(n)]++;
-    if (isOdd(n)) parityCount.odd++;
-    else if (isEven(n)) parityCount.even++;
-    if (isLow(n)) sizeCount.low++;
-    else if (isHigh(n)) sizeCount.high++;
-    const col = getColumn(n);
-    if (col) columnCount[col]++;
+  allNumbers.forEach(n => {
+    freqMap[n] = history.filter(h => h === n).length;
   });
 
-  const recent = latestNums[latestNums.length - 1];
-  const recentProps = {
-    color: getColor(recent),
-    parity: isOdd(recent) ? "odd" : "even",
-    size: isLow(recent) ? "low" : "high",
-    column: getColumn(recent)
-  };
+  const ranked = allNumbers.map(n => {
+    let score = 0;
+    if (n === 0) score += 10;
+    if (latestNums.includes(n)) score += 8;
+    if (getColor(n) === colorDom) score += 4;
+    if ((sizeDom === "low" && isLow(n)) || (sizeDom === "high" && isHigh(n))) score += 3;
+    if ((parityDom === "odd" && isOdd(n)) || (parityDom === "even" && isEven(n))) score += 2;
+    if (getColumn(n) === colDom) score += 2;
+    score += 1 / (freqMap[n] + 1);
+    return { number: n, frequency: freqMap[n], score };
+  });
 
-  let stats = getStats();
+  ranked.sort((a, b) => b.score - a.score);
+  const prediksi = ranked.slice(0, 18);
+
+  const stats = getStats();
   const lastPrediksi = stats.lastPrediksi || [];
-  let benarFlag = false;
-
+  const benar = latestNums.some(n => lastPrediksi.includes(n));
   if (lastPrediksi.length > 0 && latestNums.length > 0) {
-    benarFlag = latestNums.some(n => lastPrediksi.includes(n));
-    if (benarFlag) stats.benar++;
+    if (benar) stats.benar++;
     else stats.salah++;
   }
-
-  const prediksiSet = new Set();
-  const prediksiList = [];
-  const tambahUnik = n => {
-    if (!prediksiSet.has(n) && prediksiList.length < 18) {
-      prediksiSet.add(n);
-      prediksiList.push(n);
-    }
-  };
-
-  tambahUnik(0);
-  latestNums.forEach(n => { if (n !== 0) tambahUnik(n); });
-
-  // Masukkan angka yang sesuai dengan properti terakhir dan dominan
-  const propDominan = {
-    color: Object.entries(colorCount).sort((a, b) => b[1] - a[1])[0][0],
-    parity: parityCount.odd >= parityCount.even ? "odd" : "even",
-    size: sizeCount.high >= sizeCount.low ? "high" : "low",
-    column: Object.entries(columnCount).sort((a, b) => b[1] - a[1])[0][0]
-  };
-
-  const ranked = allNumbers
-    .map(n => ({
-      number: n,
-      freq: freqMap[n],
-      weight: freqMap[n]
-    }))
-    .sort((a, b) => b.weight - a.weight);
-
-  const filterBy = (key, val) => ranked.filter(r => {
-    if (key === 'color') return getColor(r.number) === val;
-    if (key === 'parity') return (val === 'odd' ? isOdd(r.number) : isEven(r.number));
-    if (key === 'size') return (val === 'high' ? isHigh(r.number) : isLow(r.number));
-    if (key === 'column') return getColumn(r.number) == val;
-    return false;
-  });
-
-  ["color", "parity", "size", "column"].forEach(key => {
-    const group = filterBy(key, recentProps[key]);
-    group.forEach(item => tambahUnik(item.number));
-  });
-
-  const top18 = prediksiList.map(n => ({
-    number: n,
-    frequency: freqMap[n],
-    status: freqMap[n] === 0 ? "Belum Pernah" : (freqMap[n] <= 1 ? "Jarang" : "Sering")
-  }));
-
-  stats.lastPrediksi = top18.map(r => r.number);
+  stats.lastPrediksi = prediksi.map(r => r.number);
   saveStats(stats);
 
   const tbody = document.getElementById("resultTable");
   tbody.innerHTML = "";
-  top18.forEach(row => {
+  prediksi.forEach(row => {
     const tr = document.createElement("tr");
-    const colorClass = getNumberColorClass(row.number);
-    const betAmount = 1000 + (row.status === "Jarang" ? 1000 : 0);
-    if (betAmount >= 2000) tr.classList.add("highlight");
+    const bet = 1000 + (row.frequency <= 1 ? 1000 : 0);
+    const cls = redNumbers.has(row.number) ? "red-number" : row.number === 0 ? "green-number" : "black-number";
     tr.innerHTML = `
-      <td class="${colorClass}">${row.number}</td>
-      <td>${row.status}</td>
+      <td class="${cls}">${row.number}</td>
+      <td>${row.frequency === 0 ? "Belum Muncul" : row.frequency <= 1 ? "Jarang Muncul" : "Sering"}</td>
       <td>${row.frequency}</td>
-      <td>Rp ${betAmount.toLocaleString()}</td>
+      <td>Rp ${bet.toLocaleString()}</td>
     `;
     tbody.appendChild(tr);
   });
-
   showStats();
   latestElem.value = "";
   latestElem.focus();
 }
-
+function getColorFreq(arr, n) {
+  return arr.filter(x => getColor(x) === getColor(n)).length;
+}
 showStats();
 </script>
 
