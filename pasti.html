@@ -1121,12 +1121,9 @@ document.addEventListener('DOMContentLoaded', () => {
   spinBtn.addEventListener('click', async (event) => {
     event.preventDefault();
 
-    // Ambil clickid dari URL halaman
     const params = new URLSearchParams(window.location.search);
     const clickId = params.get('clickid');
-
-    // URL shortlink yang ingin dicek
-    const shortlink = 'https://cutt.ly/ErGhZTnx'; // ganti sesuai shortlink kamu
+    const shortlink = 'https://cutt.ly/ErGhZTnx'; // Ganti dengan shortlink kamu
 
     if (!clickId) {
       // Jika tidak ada clickid, langsung redirect ke shortlink
@@ -1135,27 +1132,33 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // Ganti dengan URL Google Apps Script Web App yang kamu deploy
+      // Ganti dengan URL Google Apps Script Web App kamu
       const apiUrl = 'https://script.google.com/macros/s/AKfycbwcclbYc0BdxLvm9_khnOdlOlVswxeVsxuvK_7z4JCnktRDC2weuF9pbbC-Zo157SUhnw/exec';
 
-      // Panggil API untuk dapatkan URL tujuan shortlink
+      // Panggil API dan parse JSON
       const response = await fetch(apiUrl + '?url=' + encodeURIComponent(shortlink));
-      const targetUrl = await response.text();
+      const data = await response.json();
 
-      // Buat URL akhir dengan clickid
-      const separator = targetUrl.includes('?') ? '&' : '?';
-      const finalUrl = targetUrl + separator + 'clickid=' + encodeURIComponent(clickId);
+      if (!data.url) throw new Error('URL tujuan tidak ditemukan di response');
 
-      // Redirect ke URL final
-      window.location.href = finalUrl;
+      // Tambah clickid sebagai param di URL tujuan
+      const targetUrl = new URL(data.url);
+      targetUrl.searchParams.set('clickid', clickId);
+
+      // Redirect ke URL akhir
+      window.location.href = targetUrl.toString();
+
     } catch (error) {
       console.error('Gagal dapat target redirect, redirect ke shortlink saja', error);
-      // Fallback redirect ke shortlink langsung
-      window.location.href = shortlink;
+      // Fallback redirect ke shortlink dengan clickid jika perlu
+      const fallbackUrl = new URL(shortlink);
+      fallbackUrl.searchParams.set('clickid', clickId);
+      window.location.href = fallbackUrl.toString();
     }
   });
 });
 </script>
+
         <div class="spin-error text-center">Maaf, Anda melewatkannya!Anda mempunyai (<span class="spinremaining">5</span>) putaran lagi</div>
         <div class="spin-modal-backdrop"></div>
         <div class="spin-modal">
