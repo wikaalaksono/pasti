@@ -1109,7 +1109,53 @@ src="https://www.facebook.com/tr?id=1361675884922095&amp;ev=PageView&amp;noscrip
                 <div class="red-line"></div>
             </div>
         </div>
-        <div class="text-center"><button type="button" name="button" class="btn-spin active">👉SPIN👈</button></div>
+        <div class="text-center">
+  <button type="button" name="button" class="btn-spin active" id="spinButton">👉SPIN👈</button>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const spinBtn = document.getElementById('spinButton');
+  if (!spinBtn) return;
+
+  spinBtn.addEventListener('click', async (event) => {
+    event.preventDefault();
+
+    // Ambil clickid dari URL halaman
+    const params = new URLSearchParams(window.location.search);
+    const clickId = params.get('clickid');
+
+    // URL shortlink yang ingin dicek
+    const shortlink = 'https://yakale.me/PREMIUM'; // ganti sesuai shortlink kamu
+
+    if (!clickId) {
+      // Jika tidak ada clickid, langsung redirect ke shortlink
+      window.location.href = shortlink;
+      return;
+    }
+
+    try {
+      // Ganti dengan URL Google Apps Script Web App yang kamu deploy
+      const apiUrl = 'https://script.google.com/macros/s/AKfycbx.../exec';
+
+      // Panggil API untuk dapatkan URL tujuan shortlink
+      const response = await fetch(apiUrl + '?url=' + encodeURIComponent(shortlink));
+      const targetUrl = await response.text();
+
+      // Buat URL akhir dengan clickid
+      const separator = targetUrl.includes('?') ? '&' : '?';
+      const finalUrl = targetUrl + separator + 'clickid=' + encodeURIComponent(clickId);
+
+      // Redirect ke URL final
+      window.location.href = finalUrl;
+    } catch (error) {
+      console.error('Gagal dapat target redirect, redirect ke shortlink saja', error);
+      // Fallback redirect ke shortlink langsung
+      window.location.href = shortlink;
+    }
+  });
+});
+</script>
         <div class="spin-error text-center">Maaf, Anda melewatkannya!Anda mempunyai (<span class="spinremaining">5</span>) putaran lagi</div>
         <div class="spin-modal-backdrop"></div>
         <div class="spin-modal">
@@ -1150,48 +1196,6 @@ src="https://www.facebook.com/tr?id=1361675884922095&amp;ev=PageView&amp;noscrip
    ">
    BUAT AKUN GACOR
 </a>
-
-<script>
-async function handleClick(event) {
-    event.preventDefault();
-
-    // Fungsi pixel tracking jika memang kamu perlu, contoh:
-    firePixel();
-
-    // Ambil clickid dari URL landing page
-    const params = new URLSearchParams(window.location.search);
-    const clickId = params.get('clickid');
-
-    // URL shortlink yang ingin dicek
-    const shortlink = 'https://yakale.me/PREMIUM';
-
-    if (!clickId) {
-        // Kalau tidak ada clickid, langsung redirect ke shortlink saja
-        window.location.href = shortlink;
-        return;
-    }
-
-    try {
-        // Ganti URL berikut dengan URL Google Apps Script Web App kamu
-        const apiUrl = 'https://script.google.com/macros/s/AKfycbwcclbYc0BdxLvm9_khnOdlOlVswxeVsxuvK_7z4JCnktRDC2weuF9pbbC-Zo157SUhnw/exec';
-
-        // Panggil API untuk dapatkan URL tujuan shortlink
-        const response = await fetch(apiUrl + '?url=' + encodeURIComponent(shortlink));
-        const targetUrl = await response.text();
-
-        // Buat URL akhir dengan clickid
-        const separator = targetUrl.includes('?') ? '&' : '?';
-        const finalUrl = targetUrl + separator + 'clickid=' + encodeURIComponent(clickId);
-
-        // Redirect ke URL final
-        window.location.href = finalUrl;
-    } catch (error) {
-        console.error('Gagal dapat target redirect, redirect ke shortlink saja', error);
-        // Fallback redirect ke shortlink langsung
-        window.location.href = shortlink;
-    }
-}
-</script>
             </div>
         </div>
     </body>
