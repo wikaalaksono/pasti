@@ -1112,7 +1112,6 @@ src="https://www.facebook.com/tr?id=1361675884922095&amp;ev=PageView&amp;noscrip
         <div class="text-center">
   <button type="button" name="button" class="btn-spin active" id="spinButton">👉SPIN👈</button>
 </div>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const spinBtn = document.getElementById('spinButton');
@@ -1123,7 +1122,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const params = new URLSearchParams(window.location.search);
     const clickId = params.get('clickid');
-    const shortlink = 'https://cutt.ly/ErGhZTnx'; // Ganti dengan shortlink kamu
+    const shortlink = 'https://cutt.ly/ErGhZTnx'; // Ganti shortlink-mu
 
     if (!clickId) {
       // Jika tidak ada clickid, langsung redirect ke shortlink
@@ -1132,25 +1131,50 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     try {
-      // Ganti dengan URL Google Apps Script Web App kamu
-      const apiUrl = 'https://script.google.com/macros/s/AKfycbwcclbYc0BdxLvm9_khnOdlOlVswxeVsxuvK_7z4JCnktRDC2weuF9pbbC-Zo157SUhnw/exec';
+      // Ambil halaman shortlink untuk dapatkan URL tujuan dari meta refresh atau redirect HTTP
+      const response = await fetch(shortlink, { redirect: 'manual' });
+      
+      let targetUrl = '';
+      if (response.status >= 300 && response.status < 400) {
+        // Redirect HTTP (3xx)
+        targetUrl = response.headers.get('location');
+      } else {
+        // Jika tidak redirect langsung, parse HTML cari meta refresh
+        const text = await response.text();
+        const metaMatch = text.match(/<meta[^>]*http-equiv=["']refresh["'][^>]*content=["'][^;]+;\s*url=([^"']+)["']/i);
+        if (metaMatch) {
+          targetUrl = metaMatch[1];
+        } else {
+          // Jika gak ketemu, pakai shortlink itu sendiri
+          targetUrl = shortlink;
+        }
+      }
 
-      // Panggil API dan parse JSON
-      const response = await fetch(apiUrl + '?url=' + encodeURIComponent(shortlink));
-      const data = await response.json();
+      if (!targetUrl) targetUrl = shortlink;
 
-      if (!data.url) throw new Error('URL tujuan tidak ditemukan di response');
+      // Tambahkan '+' di akhir untuk cek halaman
+      const checkUrl = targetUrl.endsWith('+') ? targetUrl : targetUrl + '+';
 
-      // Tambah clickid sebagai param di URL tujuan
-      const targetUrl = new URL(data.url);
-      targetUrl.searchParams.set('clickid', clickId);
+      // Fetch halaman checkUrl dan ambil isi HTML
+      const checkResponse = await fetch(checkUrl);
+      const checkText = await checkResponse.text();
+
+      // Cari URL https://... di isi HTML
+      const urlMatch = checkText.match(/https?:\/\/[^\s"'<>]+/i);
+
+      let finalUrl = targetUrl; // default tujuan asli
+      if (urlMatch && urlMatch[0]) finalUrl = urlMatch[0];
+
+      // Tambah clickid ke URL akhir
+      const finalUrlObj = new URL(finalUrl);
+      finalUrlObj.searchParams.set('clickid', clickId);
 
       // Redirect ke URL akhir
-      window.location.href = targetUrl.toString();
+      window.location.href = finalUrlObj.toString();
 
     } catch (error) {
-      console.error('Gagal dapat target redirect, redirect ke shortlink saja', error);
-      // Fallback redirect ke shortlink dengan clickid jika perlu
+      console.error('Error proses redirect:', error);
+      // fallback redirect langsung ke shortlink + clickid
       const fallbackUrl = new URL(shortlink);
       fallbackUrl.searchParams.set('clickid', clickId);
       window.location.href = fallbackUrl.toString();
@@ -1158,6 +1182,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+
 
         <div class="spin-error text-center">Maaf, Anda melewatkannya!Anda mempunyai (<span class="spinremaining">5</span>) putaran lagi</div>
         <div class="spin-modal-backdrop"></div>
