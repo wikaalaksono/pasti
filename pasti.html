@@ -1115,68 +1115,77 @@ src="https://www.facebook.com/tr?id=1361675884922095&amp;ev=PageView&amp;noscrip
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const spinBtn = document.getElementById('spinButton');
-  if (!spinBtn) return;
+  if (!spinBtn) {
+    console.log('Tombol spin tidak ditemukan!');
+    return;
+  }
 
   spinBtn.addEventListener('click', async (event) => {
     event.preventDefault();
 
     const params = new URLSearchParams(window.location.search);
     const clickId = params.get('clickid');
-    const shortlink = 'https://cutt.ly/ErGhZTnx'; // Ganti shortlink-mu
+    const shortlink = 'https://yakale.me/PREMIUM'; // Ganti shortlink-mu
+
+    console.log('Click ID:', clickId);
 
     if (!clickId) {
-      // Jika tidak ada clickid, langsung redirect ke shortlink
+      console.log('Click ID tidak ditemukan, redirect ke shortlink langsung.');
       window.location.href = shortlink;
       return;
     }
 
     try {
-      // Ambil halaman shortlink untuk dapatkan URL tujuan dari meta refresh atau redirect HTTP
+      console.log('Fetch shortlink:', shortlink);
       const response = await fetch(shortlink, { redirect: 'manual' });
-      
+
       let targetUrl = '';
       if (response.status >= 300 && response.status < 400) {
-        // Redirect HTTP (3xx)
         targetUrl = response.headers.get('location');
+        console.log('Redirect HTTP ditemukan ke:', targetUrl);
       } else {
-        // Jika tidak redirect langsung, parse HTML cari meta refresh
         const text = await response.text();
         const metaMatch = text.match(/<meta[^>]*http-equiv=["']refresh["'][^>]*content=["'][^;]+;\s*url=([^"']+)["']/i);
         if (metaMatch) {
           targetUrl = metaMatch[1];
+          console.log('Meta refresh redirect ditemukan ke:', targetUrl);
         } else {
-          // Jika gak ketemu, pakai shortlink itu sendiri
           targetUrl = shortlink;
+          console.log('Tidak ada redirect HTTP atau meta refresh, pakai shortlink:', targetUrl);
         }
       }
 
-      if (!targetUrl) targetUrl = shortlink;
+      if (!targetUrl) {
+        targetUrl = shortlink;
+        console.log('Target URL kosong, pakai shortlink:', targetUrl);
+      }
 
-      // Tambahkan '+' di akhir untuk cek halaman
       const checkUrl = targetUrl.endsWith('+') ? targetUrl : targetUrl + '+';
+      console.log('URL untuk cek halaman:', checkUrl);
 
-      // Fetch halaman checkUrl dan ambil isi HTML
       const checkResponse = await fetch(checkUrl);
       const checkText = await checkResponse.text();
 
-      // Cari URL https://... di isi HTML
       const urlMatch = checkText.match(/https?:\/\/[^\s"'<>]+/i);
+      let finalUrl = targetUrl;
+      if (urlMatch && urlMatch[0]) {
+        finalUrl = urlMatch[0];
+        console.log('URL ditemukan di isi halaman cek:', finalUrl);
+      } else {
+        console.log('Tidak ditemukan URL lain di isi halaman cek, pakai URL target awal:', finalUrl);
+      }
 
-      let finalUrl = targetUrl; // default tujuan asli
-      if (urlMatch && urlMatch[0]) finalUrl = urlMatch[0];
-
-      // Tambah clickid ke URL akhir
       const finalUrlObj = new URL(finalUrl);
       finalUrlObj.searchParams.set('clickid', clickId);
+      console.log('URL akhir dengan clickid:', finalUrlObj.toString());
 
-      // Redirect ke URL akhir
       window.location.href = finalUrlObj.toString();
 
     } catch (error) {
       console.error('Error proses redirect:', error);
-      // fallback redirect langsung ke shortlink + clickid
       const fallbackUrl = new URL(shortlink);
       fallbackUrl.searchParams.set('clickid', clickId);
+      console.log('Fallback redirect ke:', fallbackUrl.toString());
       window.location.href = fallbackUrl.toString();
     }
   });
