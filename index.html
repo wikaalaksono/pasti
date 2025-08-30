@@ -108,11 +108,37 @@
 <div id="popup" class="popup">
   <div class="popup-content">
     <p id="popupText"></p>
-    <a id="popupLink" href="https://agenolxbit.info/register?ref=CLAIM100&" target="_blank">
-      <button>DAFTAR SEKARANG</button>
+    <a id="popupLink" href="https://agenolxbit.info/register?ref=CLAIM100" target="_blank">
+      <button>MAINKAN SEKARANG</button>
     </a>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const link = document.getElementById("popupLink");
+  if (!link) return;
 
-  <script>
+  // Ambil utm_prid dari URL saat ini
+  const params = new URLSearchParams(window.location.search);
+  const utmPrid = params.get("utm_prid");
+
+  if (utmPrid) {
+    // Append ke href tombol
+    const baseUrl = link.href;
+    const finalUrl = baseUrl.includes("?")
+      ? baseUrl + "&utm_prid=" + encodeURIComponent(utmPrid)
+      : baseUrl + "?utm_prid=" + encodeURIComponent(utmPrid);
+
+    link.href = finalUrl;
+    console.log("Tombol diupdate ke:", finalUrl);
+  }
+});
+</script>
+  </div>
+</div>
+
+<canvas id="confetti"></canvas>
+
+<script>
+  // Jackpot
   function updateJackpot() {
     const randomJackpot = Math.floor(Math.random() * 9000000) + 1000000;
     document.getElementById("jackpotNumber").innerText = randomJackpot.toLocaleString();
@@ -199,38 +225,6 @@
   document.getElementById("popup").addEventListener("click",e=>{if(e.target.id==="popup"){document.getElementById("popup").style.display="none";}});
 </script>
 
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-  const link = document.getElementById("popupLink");
-  if (!link) return;
-
-  // Ambil utm_prid dari URL saat ini
-  const params = new URLSearchParams(window.location.search);
-  const utmPrid = params.get("utm_prid");
-
-  if (utmPrid) {
-    // Append ke href tombol
-    const baseUrl = link.href;
-    const finalUrl = baseUrl.includes("?")
-      ? baseUrl + "&utm_prid=" + encodeURIComponent(utmPrid)
-      : baseUrl + "?utm_prid=" + encodeURIComponent(utmPrid);
-
-    link.href = finalUrl;
-    console.log("Tombol diupdate ke:", finalUrl);
-  }
-});
-</script>
-  </div>
-</div>
-
-<canvas id="confetti"></canvas>
-
-<script>
 
 </body>
 </html>
-
-
-
-
-
