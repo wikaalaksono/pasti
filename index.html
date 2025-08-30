@@ -1,107 +1,230 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Luck Spin</title>
+<link rel="icon" href="https://luck-spin.b-cdn.net/favicon-Agenolx.png" type="image/png">
 <style>
-  body { margin:0; font-family:Arial,sans-serif; background:#222; text-align:center; color:#fff; }
-  .wheel-container { position:relative; margin:100px auto; width:320px; height:320px; }
-  canvas { border-radius:50%; }
-  .pointer { position:absolute; top:-30px; left:50%; transform:translateX(-50%); width:0; height:0; }
-  .pointer::before {
-    content:""; position:absolute; left:50%; transform:translateX(-50%);
-    border-left:20px solid transparent; border-right:20px solid transparent; border-top:30px solid red;
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: url("https://luck-spin.b-cdn.net/BG-agenolx-slot.jpg") no-repeat center center/cover;
+    text-align: center;
+    color: #fff;
+    overflow-x: hidden;
   }
-  button { margin-top:20px; padding:10px 20px; font-size:18px; cursor:pointer; }
-  #popup { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); justify-content:center; align-items:center; }
-  #popup .popup-content { background:#333; padding:20px; border-radius:12px; }
+  header { padding: 10px; font-size: 24px; font-weight: bold; background: rgba(0,0,0,0.5); }
+  .jackpot {
+    position: absolute; top: 80px; left: 50%; transform: translateX(-50%);
+    font-size: 26px; font-weight: bold; color: gold;
+    text-shadow: 0 0 10px #ff0, 0 0 20px #f00, 0 0 30px #ff0;
+    background: rgba(0,0,0,0.6); padding: 10px 25px; border-radius: 12px; border: 2px solid gold;
+    animation: glow 1.5s infinite alternate; z-index: 20;
+  }
+  @keyframes glow { from { text-shadow: 0 0 10px #ff0, 0 0 20px #f00; } to { text-shadow: 0 0 20px #ff0, 0 0 30px #f80; } }
+  .wheel-container { position: relative; margin: 140px auto 20px; width: 320px; height: 320px; }
+  canvas { width: 100%; height: 100%; border-radius: 50%;
+    transition: transform 5s cubic-bezier(0.33, 1, 0.68, 1); }
+  .pointer { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); width: 0; height: 0; z-index: 10; }
+  .pointer::before {
+    content: ""; position: absolute; left: 50%; transform: translateX(-50%);
+    border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 30px solid red;
+  }
+  .pointer::after {
+    content: ""; position: absolute; left: 50%; top: -15px; transform: translateX(-50%);
+    width: 12px; height: 25px; background: red; border-radius: 3px;
+  }
+  button {
+    padding: 12px 25px; font-size: 18px; font-weight: bold; margin-top: 15px; cursor: pointer;
+    border: none; border-radius: 6px; background: linear-gradient(45deg, #ff0000, #cc0000); color: #fff; transition: transform 0.2s;
+  }
+  button:hover { transform: scale(1.1); }
+  .games { margin: 20px auto; display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; max-width: 800px; }
+
+  @keyframes floaty { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+  .games img { width:130px; border-radius:10px; cursor:pointer; transition:transform 0.3s, box-shadow 0.3s; animation:floaty 3s ease-in-out infinite; }
+  .games img:hover { transform:scale(1.1); box-shadow:0 0 15px gold; }
+
+  .promo { background: rgba(0,0,0,0.6); padding: 20px; margin: 20px; border-radius: 10px; text-align: left; font-size: 16px; }
+  .promo h2 { color: gold; }
+  .popup {
+    display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(0,0,0,0.7); justify-content: center; align-items: center; z-index: 999;
+  }
+  .popup-content { background: #222; padding: 25px; border-radius: 12px; text-align: center; color: #fff; font-size: 20px; font-weight: bold; animation: popscale 0.5s ease; }
+  @keyframes popscale { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .popup button { margin-top: 15px; background: #ff0000; font-size: 16px; }
+
+  /* Firework + Flash */
+  #confetti {
+    position: fixed; top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none; z-index: 1000;
+  }
+  .flash {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: rgba(255,215,0,0.5);
+    animation: flashAnim 0.6s ease;
+    z-index: 1001;
+  }
+  @keyframes flashAnim { from {opacity:1;} to {opacity:0;} }
+
+  @media (max-width: 600px) {
+    .jackpot { top: 50px; font-size: 20px; padding: 6px 14px; }
+    .wheel-container { margin-top: 190px; width: 85vw; height: 85vw; max-width: 320px; max-height: 320px; }
+    .pointer { top: -24px; }
+  }
 </style>
 </head>
 <body>
+<header>🎰 Luck Spin</header>
+
+<div class="jackpot">💥 JACKPOT 💥 <span id="jackpotNumber">0</span></div>
 
 <div class="wheel-container">
   <div class="pointer"></div>
-  <canvas id="wheel" width="320" height="320"></canvas>
+  <canvas id="wheel"></canvas>
 </div>
-<button id="spinBtn">SPIN</button>
+<button onclick="spin()">SPIN</button>
 
-<div id="popup">
+<div class="games">
+  <img src="https://luck-spin.b-cdn.net/crypto-gold.jpg" alt="Crypto Gold">
+  <img src="https://luck-spin.b-cdn.net/lucky-neko.jpg" alt="Lucky Neko">
+  <img src="https://luck-spin.b-cdn.net/mahjong.jpg" alt="Mahjong">
+  <img src="https://luck-spin.b-cdn.net/olympus-1000.jpg" alt="Olympus">
+  <img src="https://luck-spin.b-cdn.net/spaceman.jpg" alt="Spaceman">
+</div>
+
+<div class="promo">
+  <h2>PROMO EKSKLUSIF 100%</h2>
+  <p>1. BONUS DEPOSIT NEW MEMBER 100%</p>
+  <p>2. EVENT PANJAT TURNOVER AGENOLX</p>
+  <p>3. Event Pragmatic Play Mahjong Wins 3</p>
+  <p>4. BONUS FREESPIN KHUSUS SLOT GAMES HINGGA 200X</p>
+  <p>5. BONUS T-SHIRT EXCLUSIVE AGENOLX</p>
+</div>
+
+<div id="popup" class="popup">
   <div class="popup-content">
     <p id="popupText"></p>
-    <button onclick="closePopup()">Tutup</button>
+    <a id="popupLink" href="https://agenolxbit.info/register?ref=CLAIM100" target="_blank">
+      <button>MAINKAN SEKARANG</button>
+    </a>
   </div>
 </div>
 
+<canvas id="confetti"></canvas>
+
 <script>
-const wheelCanvas = document.getElementById("wheel");
-const ctx = wheelCanvas.getContext("2d");
-const size = wheelCanvas.width;
-const slices = ["X20","X50","X100","X250","X500","X1000"];
-const colors = ["#ff4d4d","#4da6ff","#4dff88","#ffcc00","#ff66cc","#66ffcc"];
-const sliceDeg = 360 / slices.length;
-let deg = 0, isSpinning = false;
-
-function drawWheel() {
-  ctx.clearRect(0,0,size,size);
-  for(let i=0;i<slices.length;i++){
-    ctx.beginPath();
-    ctx.moveTo(size/2,size/2);
-    ctx.arc(size/2,size/2,size/2,(sliceDeg*i)*Math.PI/180,(sliceDeg*(i+1))*Math.PI/180);
-    ctx.fillStyle=colors[i]; ctx.fill();
-    ctx.strokeStyle="#000"; ctx.lineWidth=2; ctx.stroke();
-    ctx.save();
-    ctx.translate(size/2,size/2);
-    ctx.rotate((sliceDeg*(i+0.5))*Math.PI/180);
-    ctx.textAlign="right"; ctx.fillStyle="#000"; ctx.font="bold 16px Arial";
-    ctx.fillText(slices[i],size/2-10,10);
-    ctx.restore();
+  // Jackpot
+  function updateJackpot() {
+    const randomJackpot = Math.floor(Math.random() * 9000000) + 1000000;
+    document.getElementById("jackpotNumber").innerText = randomJackpot.toLocaleString();
   }
-}
-drawWheel();
+  setInterval(updateJackpot, 2000); updateJackpot();
 
-function spin() {
-  if(isSpinning) return;
-  isSpinning=true;
-  const spins = 5 + Math.random()*5; // jumlah putaran
-  const finalDeg = deg + spins*360 + Math.random()*360; // target akhir
+  // Wheel
+  const wheelCanvas = document.getElementById("wheel");
+  const ctx = wheelCanvas.getContext("2d");
+  const size = 300;
+  wheelCanvas.width = size; wheelCanvas.height = size;
 
-  const duration = 5000; // 5 detik
-  const start = performance.now();
-  const initialDeg = deg;
+  const slices = ["X20","X50","X100","X250","X500","X1000"];
+  const colors = ["#ff4d4d","#4da6ff","#4dff88","#ffcc00","#ff66cc","#66ffcc"];
+  const sliceDeg = 360 / slices.length;
+  let deg = 0, isSpinning = false;
 
-  function animate(time){
-    let elapsed = time-start;
-    if(elapsed>duration) elapsed=duration;
-    const progress = elapsed/duration;
-    // ease out cubic
-    const ease = 1 - Math.pow(1-progress,3);
-    const currentDeg = initialDeg + (finalDeg-initialDeg)*ease;
-    wheelCanvas.style.transform = `rotate(${currentDeg}deg)`;
-    if(elapsed<duration){
-      requestAnimationFrame(animate);
-    } else {
-      deg = finalDeg % 360;
-      isSpinning=false;
-      showResult();
+  const sliceGameMap = {
+    "X20":"Crypto Gold","X50":"Lucky Neko","X100":"Mahjong",
+    "X250":"Olympus","X500":"Spaceman","X1000":"Crypto Gold"
+  };
+
+  function drawWheel() {
+    for (let i = 0; i < slices.length; i++) {
+      ctx.beginPath();
+      ctx.moveTo(size/2,size/2);
+      ctx.arc(size/2,size/2,size/2,(sliceDeg*i)*Math.PI/180,(sliceDeg*(i+1))*Math.PI/180);
+      ctx.fillStyle = colors[i]; ctx.fill();
+      ctx.save();
+      ctx.translate(size/2,size/2);
+      ctx.rotate((sliceDeg*(i+0.5))*Math.PI/180);
+      ctx.textAlign="right"; ctx.fillStyle="#000"; ctx.font="bold 16px Arial";
+      ctx.fillText(slices[i],size/2-10,10);
+      ctx.restore();
     }
   }
-  requestAnimationFrame(animate);
-}
+  drawWheel();
 
-function showResult(){
-  const pointerAngle=(270-deg+360)%360;
-  const winningIndex=Math.floor(pointerAngle/sliceDeg)%slices.length;
-  const result=slices[winningIndex];
-  document.getElementById("popupText").innerText = `🎉 Kamu dapat ${result} 🎉`;
-  document.getElementById("popup").style.display="flex";
-}
+  // Sound
+  let audioCtx = null;
+  function ensureAudio(){ if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)(); if(audioCtx.state==="suspended") audioCtx.resume(); return audioCtx;}
+  function beepAt(time,freq,duration,volume){const ctx=ensureAudio();const osc=ctx.createOscillator();const gain=ctx.createGain();osc.type="square";osc.frequency.setValueAtTime(freq,time);gain.gain.setValueAtTime(0.0001,time);gain.gain.linearRampToValueAtTime(volume,time+0.01);gain.gain.exponentialRampToValueAtTime(0.0001,time+duration);osc.connect(gain);gain.connect(ctx.destination);osc.start(time);osc.stop(time+duration+0.05);}
+  function scheduleSpinTicks(totalMs=5000){const ctx=ensureAudio();const start=ctx.currentTime+0.05;const total=totalMs/1000;let t=0;const startInterval=0.06,endInterval=0.22;while(t<total){const p=t/total;const interval=startInterval+(endInterval-startInterval)*(p*p);const freq=900-400*p;beepAt(start+t,freq,0.04,0.2);t+=interval;}}
+  function playWinSound(){const ctx=ensureAudio();const base=ctx.currentTime+0.05;[880,1175,1568].forEach((f,i)=>beepAt(base+i*0.15,f,0.15,0.3));}
 
-function closePopup(){
-  document.getElementById("popup").style.display="none";
-}
+  // Firework burst
+  const confettiCanvas=document.getElementById("confetti");
+  const ctxConfetti=confettiCanvas.getContext("2d");
+  confettiCanvas.width=window.innerWidth; confettiCanvas.height=window.innerHeight;
+  let fireworkFrame;
+  function startFirework(duration=2000){
+    clearFirework();
+    const particles=[]; const count=80;
+    for(let i=0;i<count;i++){particles.push({x:window.innerWidth/2,y:window.innerHeight/2,angle:Math.random()*2*Math.PI,speed:Math.random()*6+2,r:Math.random()*4+2,color:`hsl(${Math.random()*360},100%,50%)`});}
+    const startTime=performance.now();
+    function animate(time){
+      const progress=time-startTime;
+      ctxConfetti.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);
+      particles.forEach(p=>{p.x+=Math.cos(p.angle)*p.speed;p.y+=Math.sin(p.angle)*p.speed;p.speed*=0.96;ctxConfetti.beginPath();ctxConfetti.arc(p.x,p.y,p.r,0,Math.PI*2);ctxConfetti.fillStyle=p.color;ctxConfetti.fill();});
+      if(progress<duration){fireworkFrame=requestAnimationFrame(animate);} else {clearFirework();}
+    }
+    fireworkFrame=requestAnimationFrame(animate);
+  }
+  function clearFirework(){if(fireworkFrame) cancelAnimationFrame(fireworkFrame); ctxConfetti.clearRect(0,0,confettiCanvas.width,confettiCanvas.height);}
 
-document.getElementById("spinBtn").addEventListener("click", spin);
+  // Spin
+  function spin(){
+    if(isSpinning) return; isSpinning=true;
+    clearFirework(); ensureAudio(); scheduleSpinTicks(5000);
+    const randomSpin=Math.floor(3000+Math.random()*3000); deg+=randomSpin;
+    wheelCanvas.style.transform=`rotate(${deg}deg)`;
+    setTimeout(()=>{
+      isSpinning=false;
+      const actualDeg=((deg%360)+360)%360;
+      const pointerAngle=(270-actualDeg+360)%360;
+      const winningIndex=Math.floor(pointerAngle/sliceDeg)%slices.length;
+      const result=slices[winningIndex]; const game=sliceGameMap[result];
+      if(result==="X500"||result==="X1000"){playWinSound();startFirework(2000);const flash=document.createElement("div");flash.classList.add("flash");document.body.appendChild(flash);setTimeout(()=>flash.remove(),600);} else {playWinSound();}
+      document.getElementById("popupText").innerText=`${result} MAINKAN ${game.toUpperCase()} SEKARANG!`;
+      document.getElementById("popup").style.display="flex";
+    },5000);
+  }
+
+  document.getElementById("popup").addEventListener("click",e=>{if(e.target.id==="popup"){document.getElementById("popup").style.display="none";}});
+</script>
+
+<!-- ==== Tracking URL UTM DAN MENERUSKAN ==== -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const link = document.getElementById("popupLink");
+  if (!link) return;
+
+  // Ambil utm_prid dari URL saat ini
+  const params = new URLSearchParams(window.location.search);
+  const utmPrid = params.get("utm_prid");
+
+  if (utmPrid) {
+    // Append ke href tombol
+    const baseUrl = link.href;
+    const finalUrl = baseUrl.includes("?")
+      ? baseUrl + "&utm_prid=" + encodeURIComponent(utmPrid)
+      : baseUrl + "?utm_prid=" + encodeURIComponent(utmPrid);
+
+    link.href = finalUrl;
+    console.log("Tombol diupdate ke:", finalUrl);
+  }
+});
 </script>
 
 </body>
