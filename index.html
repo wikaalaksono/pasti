@@ -110,52 +110,28 @@
     <p id="popupText"></p>
     <a id="popupLink" href="https://yakale.me/CLAIM100" target="_blank">
       <button>MAINKAN SEKARANG</button>
-	  <script>
-async function resolveShortlink(url, visitorId) {
-  try {
-    // coba HEAD
-    let headResp = await fetch(url, { method: "HEAD", redirect: "follow" });
-    if (headResp.ok) {
-      return appendVisitorId(headResp.url, visitorId);
-    }
-  } catch (e) {
-    console.warn("HEAD gagal, coba GET", e);
-  }
-
-  try {
-    // fallback GET
-    let getResp = await fetch(url, { method: "GET", redirect: "follow" });
-    if (getResp.ok) {
-      return appendVisitorId(getResp.url, visitorId);
-    }
-  } catch (e) {
-    console.warn("GET juga gagal, fallback shortlink asli", e);
-  }
-
-  // fallback terakhir: kembalikan shortlink asli
-  return url;
-}
-
-function appendVisitorId(url, visitorId) {
-  let u = new URL(url);
-  u.searchParams.set("visitorId", visitorId);
-  return u.toString();
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-  const visitorId = document.cookie.split("; ")
-    .find(c => c.startsWith("prop_visitor_id="))
-    ?.split("=")[1];
-
-  if (!visitorId) return; // kalau tidak ada cookie, biarkan link asli
-
+    </a>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
   const link = document.getElementById("popupLink");
-  const finalUrl = await resolveShortlink(link.href, visitorId);
-  link.href = finalUrl;
+  if (!link) return;
+
+  // Ambil utm_prid dari URL saat ini
+  const params = new URLSearchParams(window.location.search);
+  const utmPrid = params.get("utm_prid");
+
+  if (utmPrid) {
+    // Append ke href tombol
+    const baseUrl = link.href;
+    const finalUrl = baseUrl.includes("?")
+      ? baseUrl + "&utm_prid=" + encodeURIComponent(utmPrid)
+      : baseUrl + "?utm_prid=" + encodeURIComponent(utmPrid);
+
+    link.href = finalUrl;
+    console.log("Tombol diupdate ke:", finalUrl);
+  }
 });
 </script>
-
-    </a>
   </div>
 </div>
 
@@ -249,16 +225,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("popup").addEventListener("click",e=>{if(e.target.id==="popup"){document.getElementById("popup").style.display="none";}});
 </script>
 
-<!-- ==== Tracking UTM + Conversion ==== -->
-<script>
-  // Simpan utm_prid ke cookie
-  var value = new URL(location.href).searchParams.get("utm_prid");
-  if (value) {
-      var date = new Date();
-      date.setTime(date.getTime() + (30*24*60*60*1000)); // 30 hari
-      document.cookie = "prop_visitor_id=" + (value || "")  + "; expires=" + date.toUTCString() + "; path=/";
-  }
-</script>
-
 </body>
 </html>
+
