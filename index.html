@@ -112,7 +112,7 @@
       <button>DAFTAR SEKARANG</button>
     </a>
 
-  // Jackpot
+  <script>
   function updateJackpot() {
     const randomJackpot = Math.floor(Math.random() * 9000000) + 1000000;
     document.getElementById("jackpotNumber").innerText = randomJackpot.toLocaleString();
@@ -198,6 +198,7 @@
 
   document.getElementById("popup").addEventListener("click",e=>{if(e.target.id==="popup"){document.getElementById("popup").style.display="none";}});
 </script>
+
 <script>
 document.addEventListener("DOMContentLoaded", function() {
   const link = document.getElementById("popupLink");
@@ -228,6 +229,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
 </body>
 </html>
+
 
 
 
